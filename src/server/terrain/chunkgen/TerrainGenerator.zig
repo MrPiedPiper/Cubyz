@@ -29,6 +29,19 @@ pub fn init(parameters: ZonElement) void {
 	stone = main.blocks.parseBlock("cubyz:slate/smooth");
 }
 
+fn isOceansCompatible(relPos: Vec3i, biome: *const Biome, biomeMap: CaveBiomeMap.CaveBiomeMapView, caveMap: CaveMap.CaveMapView) bool {
+	const neighborBiome = biomeMap.getBiome(relPos[0], relPos[1], relPos[2]);
+	if (relPos[0] >= -32 and relPos[0] <= biomeMap.width + 32 and relPos[1] >= -32 and relPos[1] <= biomeMap.width + 32 and relPos[2] >= -32 and relPos[2] <= biomeMap.width + 32 and caveMap.isSolid(relPos[0], relPos[1], relPos[2])) return true;
+	if (biome == neighborBiome) return true;
+	for (biome.oceanProperties.compatibleLiquidTags) |block| {
+		if (neighborBiome.hasTag(block)) return true;
+	}
+	for (biome.oceanProperties.compatibleNeighborLiquidBlocks) |block| {
+		if (block == neighborBiome.oceanProperties.liquidBlock) return true;
+	}
+	return false;
+}
+
 pub fn generate(worldSeed: u64, chunk: *main.chunk.ServerChunk, caveMap: CaveMap.CaveMapView, biomeMap: CaveBiomeMap.CaveBiomeMapView) void {
 	if (chunk.super.pos.voxelSize >= 8) {
 		var maxHeight: i32 = 0;
@@ -150,7 +163,24 @@ pub fn generate(worldSeed: u64, chunk: *main.chunk.ServerChunk, caveMap: CaveMap
 								chunk.updateBlockColumnInGeneration(x, y, oceanHeight, z, .{.typ = 0, .data = 0});
 								z = oceanHeight - chunk.super.pos.voxelSize;
 							}
-							chunk.updateBlockColumnInGeneration(x, y, zStart, z, biome.liquidBlock);
+							var isPlacingWall = false;
+							if (biome.oceanProperties.wallThickness > 0) {
+								wallCheck: for (0..biome.oceanProperties.wallThickness*2 + 1) |wallThicknessRelativeTestX| {
+									for (0..biome.oceanProperties.wallThickness*2 + 1) |wallThicknessRelativeTestY| {
+										const relativeCheckLocation = Vec3i{@as(i32, @intCast(@as(i32, @intCast(wallThicknessRelativeTestX)) - @as(i32, @intCast(biome.oceanProperties.wallThickness)))), @as(i32, @intCast(@as(i32, @intCast(wallThicknessRelativeTestY)) - @as(i32, @intCast(biome.oceanProperties.wallThickness)))), 0};
+										const distanceToBlock = @sqrt(std.math.pow(f32, @as(f32, @floatFromInt(relativeCheckLocation[0])), 2) + std.math.pow(f32, @as(f32, @floatFromInt(relativeCheckLocation[1])), 2));
+										if (distanceToBlock > @as(f32, @floatFromInt(biome.oceanProperties.wallThickness))) {
+											continue;
+										}
+										const neighborCoordsTop = Vec3i{x, y, z} + relativeCheckLocation;
+										if (isOceansCompatible(neighborCoordsTop, biome, biomeMap, caveMap)) continue;
+										isPlacingWall = true;
+										break :wallCheck;
+									}
+								}
+							}
+							const blockToPlace = if (isPlacingWall) biome.stoneBlock else biome.oceanProperties.liquidBlock;
+							chunk.updateBlockColumnInGeneration(x, y, zStart, z, blockToPlace);
 						}
 						z = zStart;
 					}

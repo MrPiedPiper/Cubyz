@@ -79,6 +79,32 @@ const Stripe = struct { // MARK: Stripe
 	}
 };
 
+const OceanProperties = struct {
+	liquidBlock: main.blocks.Block,
+	compatibleNeighborLiquidBlocks: []main.blocks.Block,
+	compatibleLiquidTags: []Tag,
+	wallThickness: u8,
+
+	pub fn loadFromZon(zon: ZonElement) OceanProperties {
+		var result: OceanProperties = .{
+			.liquidBlock = blocks.parseBlock(zon.get([]const u8, "liquidBlock") orelse "cubyz:water"),
+			.compatibleNeighborLiquidBlocks = &.{},
+			.compatibleLiquidTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("compatibleLiquidTags")),
+			.wallThickness = zon.get(u8, "wallThickness") orelse 1,
+		};
+		const compatibleNeighborLiquidBlocks = zon.getChild("compatibleNeighborLiquidBlocks");
+		result.compatibleNeighborLiquidBlocks = main.worldArena.alloc(main.blocks.Block, compatibleNeighborLiquidBlocks.toSlice().len);
+		for (compatibleNeighborLiquidBlocks.toSlice(), 0..) |elem, i| {
+			result.compatibleNeighborLiquidBlocks[i] = main.blocks.parseBlock(elem.stringOwned);
+		}
+		if (compatibleNeighborLiquidBlocks.toSlice().len == 0) {
+			result.compatibleNeighborLiquidBlocks = main.worldArena.create([1]main.blocks.Block);
+			result.compatibleNeighborLiquidBlocks[0] = result.liquidBlock;
+		}
+		return result;
+	}
+};
+
 pub fn hashGeneric(input: anytype) u64 {
 	const T = @TypeOf(input);
 	return switch (@typeInfo(T)) {
@@ -263,7 +289,8 @@ pub const Biome = struct { // MARK: Biome
 	isValidPlayerSpawn: bool,
 	chance: f32,
 	tags: []const Tag,
-	liquidBlock: main.blocks.Block,
+	oceanProperties: OceanProperties,
+
 
 	pub fn init(self: *Biome, id: []const u8, paletteId: u32, zon: ZonElement) void {
 		const minRadius = zon.get(f32, "radius") orelse zon.get(f32, "minRadius") orelse 256;
@@ -307,7 +334,7 @@ pub const Biome = struct { // MARK: Biome
 			.chance = zon.get(f32, "chance") orelse if (zon == .null) 0 else 1,
 			.maxSubBiomeCount = zon.get(f32, "maxSubBiomeCount") orelse std.math.floatMax(f32),
 			.tags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("tags")),
-			.liquidBlock = blocks.parseBlock(zon.get([]const u8, "liquidBlock") orelse "cubyz:water"),
+			.oceanProperties = OceanProperties.loadFromZon(zon.getChild("oceanProperties")),
 		};
 		if (self.isCave) {
 			for (self.tags) |tag| {
