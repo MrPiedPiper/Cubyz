@@ -81,17 +81,30 @@ const Stripe = struct { // MARK: Stripe
 
 const OceanProperties = struct {
 	liquidBlock: main.blocks.Block,
+	incompatibleNeighborLiquidBlocks: []main.blocks.Block,
 	compatibleNeighborLiquidBlocks: []main.blocks.Block,
-	compatibleLiquidTags: []Tag,
+	incompatibleNeighborBiomeTags: []Tag,
+	compatibleNeighborBiomeTags: []Tag,
+	incompatibleNeighborBlockTags: []Tag,
+	compatibleNeighborBlockTags: []Tag,
 	wallThickness: u8,
 
 	pub fn loadFromZon(zon: ZonElement) OceanProperties {
 		var result: OceanProperties = .{
 			.liquidBlock = blocks.parseBlock(zon.get([]const u8, "liquidBlock") orelse "cubyz:water"),
+			.incompatibleNeighborLiquidBlocks = &.{},
 			.compatibleNeighborLiquidBlocks = &.{},
-			.compatibleLiquidTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("compatibleLiquidTags")),
+			.incompatibleNeighborBiomeTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("incompatibleNeighborBiomeTags")),
+			.compatibleNeighborBiomeTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("compatibleNeighborBiomeTags")),
+			.incompatibleNeighborBlockTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("incompatibleNeighborBlockTags")),
+			.compatibleNeighborBlockTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("compatibleNeighborBlockTags")),
 			.wallThickness = zon.get(u8, "wallThickness") orelse 1,
 		};
+		const incompatibleNeighborLiquidBlocks = zon.getChild("incompatibleNeighborLiquidBlocks");
+		result.incompatibleNeighborLiquidBlocks = main.worldArena.alloc(main.blocks.Block, incompatibleNeighborLiquidBlocks.toSlice().len);
+		for (incompatibleNeighborLiquidBlocks.toSlice(), 0..) |elem, i| {
+			result.incompatibleNeighborLiquidBlocks[i] = main.blocks.parseBlock(elem.stringOwned);
+		}
 		const compatibleNeighborLiquidBlocks = zon.getChild("compatibleNeighborLiquidBlocks");
 		result.compatibleNeighborLiquidBlocks = main.worldArena.alloc(main.blocks.Block, compatibleNeighborLiquidBlocks.toSlice().len);
 		for (compatibleNeighborLiquidBlocks.toSlice(), 0..) |elem, i| {

@@ -32,12 +32,24 @@ pub fn init(parameters: ZonElement) void {
 fn isOceansCompatible(relPos: Vec3i, biome: *const Biome, biomeMap: CaveBiomeMap.CaveBiomeMapView, caveMap: CaveMap.CaveMapView) bool {
 	const neighborBiome = biomeMap.getBiome(relPos[0], relPos[1], relPos[2]);
 	if (relPos[0] >= -32 and relPos[0] <= biomeMap.width + 32 and relPos[1] >= -32 and relPos[1] <= biomeMap.width + 32 and relPos[2] >= -32 and relPos[2] <= biomeMap.width + 32 and caveMap.isSolid(relPos[0], relPos[1], relPos[2])) return true;
+	for (biome.oceanProperties.incompatibleNeighborBiomeTags) |tag| {
+		if (neighborBiome.hasTag(tag)) return false;
+	}
+	for (biome.oceanProperties.incompatibleNeighborLiquidBlocks) |block| {
+		if (block == neighborBiome.oceanProperties.liquidBlock) return false;
+	}
+	for (biome.oceanProperties.incompatibleNeighborBlockTags) |tag| {
+		if (neighborBiome.oceanProperties.liquidBlock.hasTag(tag)) return false;
+	}
 	if (biome == neighborBiome) return true;
-	for (biome.oceanProperties.compatibleLiquidTags) |block| {
-		if (neighborBiome.hasTag(block)) return true;
+	for (biome.oceanProperties.compatibleNeighborBiomeTags) |tag| {
+		if (neighborBiome.hasTag(tag)) return true;
 	}
 	for (biome.oceanProperties.compatibleNeighborLiquidBlocks) |block| {
 		if (block == neighborBiome.oceanProperties.liquidBlock) return true;
+	}
+	for (biome.oceanProperties.compatibleNeighborBlockTags) |tag| {
+		if (neighborBiome.oceanProperties.liquidBlock.hasTag(tag)) return true;
 	}
 	return false;
 }
