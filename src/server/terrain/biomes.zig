@@ -304,7 +304,6 @@ pub const Biome = struct { // MARK: Biome
 	tags: []const Tag,
 	oceanProperties: OceanProperties,
 
-
 	pub fn init(self: *Biome, id: []const u8, paletteId: u32, zon: ZonElement) void {
 		const minRadius = zon.get(f32, "radius") orelse zon.get(f32, "minRadius") orelse 256;
 		const maxRadius = zon.get(f32, "maxRadius") orelse minRadius;
