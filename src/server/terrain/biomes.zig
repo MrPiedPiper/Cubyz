@@ -85,8 +85,8 @@ const OceanProperties = struct {
 	compatibleNeighborLiquidBlocks: []main.blocks.Block,
 	incompatibleNeighborBiomeTags: []Tag,
 	compatibleNeighborBiomeTags: []Tag,
-	incompatibleNeighborBlockTags: []Tag,
-	compatibleNeighborBlockTags: []Tag,
+	incompatibleNeighborLiquidBlockTags: []Tag,
+	compatibleNeighborLiquidBlockTags: []Tag,
 	wallThickness: u8,
 
 	pub fn loadFromZon(zon: ZonElement) OceanProperties {
@@ -96,8 +96,8 @@ const OceanProperties = struct {
 			.compatibleNeighborLiquidBlocks = &.{},
 			.incompatibleNeighborBiomeTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("incompatibleNeighborBiomeTags")),
 			.compatibleNeighborBiomeTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("compatibleNeighborBiomeTags")),
-			.incompatibleNeighborBlockTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("incompatibleNeighborBlockTags")),
-			.compatibleNeighborBlockTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("compatibleNeighborBlockTags")),
+			.incompatibleNeighborLiquidBlockTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("incompatibleNeighborLiquidBlockTags")),
+			.compatibleNeighborLiquidBlockTags = Tag.loadTagsFromZon(main.worldArena, zon.getChild("compatibleNeighborLiquidBlockTags")),
 			.wallThickness = zon.get(u8, "wallThickness") orelse 1,
 		};
 		const incompatibleNeighborLiquidBlocks = zon.getChild("incompatibleNeighborLiquidBlocks");

@@ -38,7 +38,7 @@ fn isOceansCompatible(relPos: Vec3i, biome: *const Biome, biomeMap: CaveBiomeMap
 	for (biome.oceanProperties.incompatibleNeighborLiquidBlocks) |block| {
 		if (block == neighborBiome.oceanProperties.liquidBlock) return false;
 	}
-	for (biome.oceanProperties.incompatibleNeighborBlockTags) |tag| {
+	for (biome.oceanProperties.incompatibleNeighborLiquidBlockTags) |tag| {
 		if (neighborBiome.oceanProperties.liquidBlock.hasTag(tag)) return false;
 	}
 	if (biome == neighborBiome) return true;
@@ -48,7 +48,7 @@ fn isOceansCompatible(relPos: Vec3i, biome: *const Biome, biomeMap: CaveBiomeMap
 	for (biome.oceanProperties.compatibleNeighborLiquidBlocks) |block| {
 		if (block == neighborBiome.oceanProperties.liquidBlock) return true;
 	}
-	for (biome.oceanProperties.compatibleNeighborBlockTags) |tag| {
+	for (biome.oceanProperties.compatibleNeighborLiquidBlockTags) |tag| {
 		if (neighborBiome.oceanProperties.liquidBlock.hasTag(tag)) return true;
 	}
 	return false;
